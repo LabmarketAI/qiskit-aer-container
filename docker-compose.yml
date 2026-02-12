@@ -3,6 +3,8 @@ services:
     build:
       context: .
     runtime: nvidia
+    ports:
+      - "8888:8888"
     volumes:
       - ./workspace:/workspace
     deploy:
@@ -12,5 +14,3 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-    stdin_open: true
-    tty: true

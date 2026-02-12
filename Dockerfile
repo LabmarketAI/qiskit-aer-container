@@ -18,4 +18,6 @@ RUN pip install --upgrade pip \
 
 WORKDIR /workspace
 
-CMD ["/bin/bash"]
+EXPOSE 8888
+
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=''", "--NotebookApp.password=''"]
