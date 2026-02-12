@@ -98,7 +98,7 @@ python-json-logger==4.0.0
 PyYAML==6.0.3
 pyzmq==27.1.0
 qiskit==2.3.0
-qiskit-aer-gpu==0.15.1
+qiskit-aer-gpu-cu11==0.17.2
 qiskit-algorithms==0.4.0
 qiskit-ibm-runtime==0.45.0
 qiskit-optimization==0.7.0
