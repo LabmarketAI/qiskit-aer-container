@@ -6,6 +6,10 @@ Ultimately, this will be a node in an esemble of containers used for open-source
 
 IBM provides a similar, [containerized version of qiskit](https://github.com/christopherporter1/hpc-course-demos).
 
+## Examples
+
+See the notebooks in `./workspace` for usage and proof-of-life tests.
+
 ## Features
 
 - **Qiskit Aer GPU** simulator with CUDA support
@@ -52,3 +56,4 @@ Jupyter Lab is running at:
 
   http://localhost:8888
 ```
+
