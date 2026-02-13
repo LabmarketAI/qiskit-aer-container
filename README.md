@@ -4,6 +4,8 @@ This repo describes a Docker image to load an AER Quantum Simulator and host Jup
 
 Ultimately, this will be a node in an esemble of containers used for open-source drug discovery tools. Examples will evntually be provided.
 
+IBM provides a similar, [containerized version of qiskit](https://github.com/christopherporter1/hpc-course-demos).
+
 ## Usage
 
 ```
