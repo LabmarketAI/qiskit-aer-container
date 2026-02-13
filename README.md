@@ -6,6 +6,12 @@ Ultimately, this will be a node in an esemble of containers used for open-source
 
 IBM provides a similar, [containerized version of qiskit](https://github.com/christopherporter1/hpc-course-demos).
 
+## Features
+
+- **Qiskit Aer GPU** simulator with CUDA support
+- **Jupyter Lab** accessible at `http://localhost:8888`
+- **SLURM** workload manager (`slurmctld`, `slurmd`, `srun`, `sbatch`, `squeue`, `sinfo`, etc.) for job scheduling
+
 ## Usage
 
 ```
