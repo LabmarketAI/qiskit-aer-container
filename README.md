@@ -12,6 +12,16 @@ IBM provides a similar, [containerized version of qiskit](https://github.com/chr
 - **Jupyter Lab** accessible at `http://localhost:8888`
 - **SLURM** workload manager (`slurmctld`, `slurmd`, `srun`, `sbatch`, `squeue`, `sinfo`, etc.) for job scheduling
 
+## Pre-built Image
+
+A pre-built image is published to the GitHub Container Registry on every push to `main`:
+
+```
+docker pull ghcr.io/labmarketai/qiskit-aer-container:main
+```
+
+Browse available tags at [ghcr.io/labmarketai/qiskit-aer-container](https://github.com/LabmarketAI/qiskit-aer-container/pkgs/container/qiskit-aer-container).
+
 ## Usage
 
 ```
