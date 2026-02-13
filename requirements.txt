@@ -136,3 +136,5 @@ huggingface_hub
 accelerate
 safetensors
 pytrials
+fhirclient
+fhir.resources
