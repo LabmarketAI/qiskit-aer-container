@@ -11,6 +11,7 @@ IBM provides a similar, [containerized version of qiskit](https://github.com/chr
 - **Qiskit Aer GPU** simulator with CUDA support
 - **Jupyter Lab** accessible at `http://localhost:8888`
 - **SLURM** workload manager (`slurmctld`, `slurmd`, `srun`, `sbatch`, `squeue`, `sinfo`, etc.) for job scheduling
+- **HuggingFace** `transformers` and `huggingface_hub` with GPU-accelerated inference and a configurable local models directory
 
 ## Pre-built Image
 
@@ -29,6 +30,16 @@ make up       # Start the container (uses cached image)
 make down     # Stop and remove the container
 make rebuild  # Rebuild from scratch (no cache) and start
 ```
+
+### Local Models Directory
+
+HuggingFace models are cached in a `/models` volume inside the container. By default this maps to `./models` next to the compose file. To use an existing cache on the host:
+
+```
+HF_MODELS_DIR=/path/to/my/models make up
+```
+
+Models downloaded inside the container (e.g. via `transformers.AutoModel.from_pretrained()`) will persist across restarts.
 
 ### Example: `make up`
 

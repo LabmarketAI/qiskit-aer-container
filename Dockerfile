@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     libopenblas0 libgomp1 \
     libcairo2-dev pkg-config \
     munge slurm-wlm slurm-client \
+    git git-lfs \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python3 -m venv /opt/venv
@@ -16,6 +17,8 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip install --upgrade pip \
     && pip install -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt
+
+ENV HF_HOME=/models
 
 WORKDIR /workspace
 
