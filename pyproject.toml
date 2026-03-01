@@ -1,0 +1,17 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "jupyter-pubsub"
+version = "0.1.0"
+description = "WebSocket pub/sub extension for Jupyter — stream cell outputs to external subscribers"
+requires-python = ">=3.10"
+dependencies = [
+    "jupyter_server>=2",
+    "pyzmq",
+    "tornado",
+]
+
+[project.entry-points."jupyter_server.extensions"]
+jupyter_pubsub = "jupyter_pubsub:PubSubExtension"

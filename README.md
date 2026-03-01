@@ -6,6 +6,72 @@ Ultimately, this will be a node in an esemble of containers used for open-source
 
 IBM provides a similar, [containerized version of qiskit](https://github.com/christopherporter1/hpc-course-demos).
 
+## Jupyter Client Message Bus
+
+`jupyter_pubsub` is a Jupyter Server extension included in this repo that streams cell outputs to external WebSocket subscribers in real time. It enables use cases like pushing a NetworkX graph from a notebook directly into a Babylon.js scene, or feeding a live pandas DataFrame into a Godot-Charts widget.
+
+### Local setup (no Docker required)
+
+```bash
+uv venv
+uv pip install jupyterlab pyzmq jupyter_client networkx igraph matplotlib pandas
+uv pip install -e .
+source .venv/bin/activate
+jupyter lab --no-browser
+```
+
+### Tagging a cell for publishing
+
+Add a `# pubsub: <name>` comment anywhere in a cell (first line recommended):
+
+```python
+# pubsub: nx-graph
+import networkx as nx, json
+G = nx.karate_club_graph()
+print(json.dumps(nx.node_link_data(G, edges="links")))
+```
+
+Any cell without this comment is ignored by the extension.
+
+### Subscribing from a client
+
+Connect a WebSocket to `/pubsub/ws/<cell_name>`. In a browser DevTools console:
+
+```js
+const ws = new WebSocket('ws://localhost:8888/pubsub/ws/nx-graph');
+ws.onmessage = e => console.log(JSON.parse(e.data));
+```
+
+Each time the tagged cell executes, all connected subscribers receive a JSON envelope:
+
+```json
+{
+  "cell_name": "nx-graph",
+  "kernel_id": "abc-123",
+  "msg_type": "stream",
+  "chunk_id": 1,
+  "total_chunks": 1,
+  "data": "...",
+  "metadata": {}
+}
+```
+
+Multiple clients can subscribe to the same cell simultaneously. If a subscriber falls behind, its oldest buffered messages are dropped to keep it connected.
+
+### Discovery endpoint
+
+```
+GET http://localhost:8888/pubsub/cells
+```
+
+Returns the currently active cell names, per-cell subscriber counts, and the number of running kernel listeners.
+
+### Example notebook
+
+See [`workspace/pubsub_example.ipynb`](workspace/pubsub_example.ipynb) for a working demo with a NetworkX graph cell and a pandas DataFrame cell.
+
+---
+
 ## Examples
 
 See the notebooks in `./workspace` for usage and proof-of-life tests.
