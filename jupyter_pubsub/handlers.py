@@ -65,8 +65,12 @@ class PubSubWebSocketHandler(websocket.WebSocketHandler):
     async def _send_loop(self) -> None:
         try:
             while True:
-                envelope = await self.queue.get()
-                self.write_message(json.dumps(envelope))
+                try:
+                    envelope = await asyncio.wait_for(self.queue.get(), timeout=2.0)
+                    self.write_message(json.dumps(envelope))
+                except asyncio.TimeoutError:
+                    # Re-check for kernels that started after this client connected.
+                    _ensure_listeners(self.settings)
         except websocket.WebSocketClosedError:
             pass
         except asyncio.CancelledError:
