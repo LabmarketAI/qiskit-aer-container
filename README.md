@@ -66,6 +66,53 @@ GET http://localhost:8888/pubsub/cells
 
 Returns the currently active cell names, per-cell subscriber counts, and the number of running kernel listeners.
 
+### Testing with `pubsub-cli`
+
+`pubsub-cli` is an interactive shell for inspecting and watching the message bus from the terminal.
+
+```bash
+source .venv/bin/activate
+pubsub-cli                        # connects to localhost:8888 by default
+pubsub-cli --host 0.0.0.0 --port 8888
+```
+
+| Command | Description |
+|---|---|
+| `list` | Show all active cell names, per-cell subscriber counts, and kernel listener count |
+| `kernels` | List running kernels and their execution state |
+| `watch <cell>` | Stream live envelopes from a tagged cell — press **Enter** to stop |
+| `clear` | Clear the screen |
+| `help` | Show command reference |
+| `quit` / `exit` | Exit |
+
+Example session:
+
+```
+jupyter_pubsub CLI  http://localhost:8888
+Type "help" for commands.
+
+pubsub> list
+
+  Cell                           Subscribers
+  ──────────────────────────────  ───────────
+  nx-graph                        1
+  df-summary                      0
+
+  Active kernel listeners: 1
+
+pubsub> watch nx-graph
+
+  Watching nx-graph  —  press Enter to stop
+
+  15:42:01  nx-graph  stream
+  "{\"directed\": false, \"multigraph\": false, …  (4,425 chars total)
+
+  Stopped watching.
+
+pubsub> quit
+Bye.
+```
+
 ### Example notebook
 
 See [`workspace/pubsub_example.ipynb`](workspace/pubsub_example.ipynb) for a working demo with a NetworkX graph cell and a pandas DataFrame cell.
