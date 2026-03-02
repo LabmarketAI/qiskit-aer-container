@@ -13,5 +13,8 @@ dependencies = [
     "tornado",
 ]
 
+[project.scripts]
+pubsub-cli = "pubsub_cli:main"
+
 [project.entry-points."jupyter_server.extensions"]
 jupyter_pubsub = "jupyter_pubsub:PubSubExtension"
