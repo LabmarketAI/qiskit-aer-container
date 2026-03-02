@@ -28,14 +28,14 @@ _IDS_MSG = b"<IDS|MSG>"
 _OUTPUT_TYPES = {"execute_result", "display_data", "stream"}
 
 
-def _parse_wire(parts: list[bytes]) -> tuple[str, dict] | None:
+def _parse_wire(parts: list[bytes]) -> tuple[str, str, dict] | None:
     """
     Parse a Jupyter wire-protocol multipart message.
 
     Wire format (after any ZMQ identity frames):
         [...identities..., b"<IDS|MSG>", hmac, header, parent_header, metadata, content, *buffers]
 
-    Returns (msg_type, content) or None if unparseable.
+    Returns (msg_type, msg_id, content) or None if unparseable.
     """
     try:
         sep = parts.index(_IDS_MSG)
@@ -44,7 +44,7 @@ def _parse_wire(parts: list[bytes]) -> tuple[str, dict] | None:
     try:
         header = json.loads(parts[sep + 2])
         content = json.loads(parts[sep + 5])
-        return header.get("msg_type", ""), content
+        return header.get("msg_type", ""), header.get("msg_id", ""), content
     except (IndexError, json.JSONDecodeError, UnicodeDecodeError):
         return None
 
@@ -85,7 +85,7 @@ async def listen_iopub(
             parsed = _parse_wire(parts)
             if parsed is None:
                 continue
-            msg_type, content = parsed
+            msg_type, msg_id, content = parsed
 
             if msg_type == "execute_input":
                 code = content.get("code", "")
@@ -93,9 +93,6 @@ async def listen_iopub(
                 current_cell_name = match.group(1) if match else None
 
             elif msg_type in _OUTPUT_TYPES and current_cell_name:
-                if current_cell_name not in registry:
-                    continue  # no subscribers — skip serialisation work
-
                 if msg_type == "stream":
                     data = content.get("text")
                 else:
@@ -104,6 +101,7 @@ async def listen_iopub(
                 envelope = {
                     "cell_name": current_cell_name,
                     "kernel_id": kernel_id,
+                    "msg_id": msg_id,
                     "msg_type": msg_type,
                     "chunk_id": 1,
                     "total_chunks": 1,

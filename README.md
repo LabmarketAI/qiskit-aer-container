@@ -119,6 +119,120 @@ See [`workspace/pubsub_example.ipynb`](workspace/pubsub_example.ipynb) for a wor
 
 ---
 
+## Phase 2 — REST API, MCP Discovery, JS Client
+
+### REST API (Phase 2)
+
+All endpoints return `application/json` with `Access-Control-Allow-Origin: *`.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/pubsub/cells` | All known cells (active + historical) with subscriber counts |
+| `GET` | `/pubsub/cells/<cell_name>` | Per-cell detail: subscriber count, history size, last msg type |
+| `GET` | `/pubsub/kernels` | Running kernel listeners and their status |
+| `GET` | `/pubsub/history/<cell_name>?limit=N` | Last N messages from the ring buffer (max 50) |
+| `GET` | `/pubsub/mcp` | MCP server manifest |
+| `POST` | `/pubsub/mcp` | MCP JSON-RPC dispatcher |
+
+The message envelope now includes `msg_id` (Jupyter message ID), which the JS client uses for multi-chunk reassembly:
+
+```json
+{
+  "cell_name": "nx-graph",
+  "kernel_id": "abc-123",
+  "msg_id": "7f3a...",
+  "msg_type": "stream",
+  "chunk_id": 1,
+  "total_chunks": 1,
+  "data": "...",
+  "metadata": {}
+}
+```
+
+History is kept in a per-cell ring buffer (last 50 messages) that persists regardless of whether any WebSocket clients are connected.
+
+### MCP Discovery Server (Phase 2)
+
+`jupyter_pubsub` exposes a [Model Context Protocol](https://modelcontextprotocol.io/) JSON-RPC endpoint so AI agents can discover and consume cell output streams automatically.
+
+**Server manifest**
+
+```
+GET http://localhost:8888/pubsub/mcp
+```
+
+**Available MCP tools**
+
+| Tool | Arguments | Description |
+|------|-----------|-------------|
+| `list_cells` | — | List all known cells with subscriber counts |
+| `get_cell_info` | `cell_name` | Detail for one cell |
+| `get_history` | `cell_name`, `limit` | Recent messages (max 50) |
+| `get_ws_url` | `cell_name` | WebSocket URL for live streaming |
+
+**Example — MCP `initialize` handshake**
+
+```bash
+curl -X POST http://localhost:8888/pubsub/mcp \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}'
+```
+
+**Example — call `get_history` tool**
+
+```bash
+curl -X POST http://localhost:8888/pubsub/mcp \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"get_history","arguments":{"cell_name":"nx-graph","limit":5}}}'
+```
+
+**Resources** — each known cell is also exposed as an MCP resource at `pubsub://cell/<cell_name>`, readable via `resources/read`.
+
+### JavaScript Client Library (Phase 2)
+
+`pubsub_client.js` is a zero-dependency browser ES module that provides a clean API over the WebSocket and REST endpoints, including transparent multi-chunk reassembly.
+
+```html
+<script type="module">
+import { PubSubClient } from './pubsub_client.js';
+
+const client = new PubSubClient('localhost', 8888);
+
+// Discover available cells
+const { cells } = await client.listCells();
+console.log('Active cells:', cells);
+
+// Fetch recent history without opening a WebSocket
+const { messages } = await client.getHistory('nx-graph', 10);
+
+// Subscribe to live output (auto-reconnects on disconnect)
+const unsub = client.subscribe('nx-graph', (envelope) => {
+  const graph = JSON.parse(envelope.data);
+  renderGraph(graph); // your visualisation here
+});
+
+// Stop when done
+unsub();
+</script>
+```
+
+**API**
+
+| Method | Description |
+|--------|-------------|
+| `listCells()` | `GET /pubsub/cells` — returns `{ cells, subscriber_counts, kernel_count }` |
+| `getCellInfo(cellName)` | `GET /pubsub/cells/<name>` — subscriber count, history size, ws_url |
+| `getHistory(cellName, limit)` | `GET /pubsub/history/<name>` — last N envelopes |
+| `getMCPManifest()` | `GET /pubsub/mcp` — server capabilities |
+| `subscribe(cellName, cb, opts)` | Open WebSocket; reassemble multi-chunk messages; auto-reconnect |
+| `unsubscribe(cellName)` | Close a named subscription |
+| `unsubscribeAll()` | Close all open subscriptions |
+| `callMCPTool(name, args)` | `POST /pubsub/mcp` `tools/call` — call any MCP tool |
+
+Multi-chunk messages (for large outputs, planned for Phase 3) are reassembled transparently using `msg_id` before the callback fires. The caller always receives a single complete envelope.
+
+---
+
 ## Examples
 
 See the notebooks in `./workspace` for usage and proof-of-life tests.
